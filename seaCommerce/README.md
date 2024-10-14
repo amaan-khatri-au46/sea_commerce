@@ -32,7 +32,7 @@ The password validation is implemented using Yup:
       .matches(/[0-9]/, 'Must have digit'), 
 
 
-# password validation has been comeneted beacue the actual passowrd doest not contain this condtion so it will not allwoed to submit form 
+# Password validation has been commented out because the actual password does not contain these conditions, so it will not allow the form to be submitted.
 
 ### Instructions:
 - Replace `<your-repo-url>` with the actual URL of your repository.
