@@ -1,55 +1,66 @@
-import axios from 'axios'
-import appConfig from '@/configs/app.config'
-import { REQUEST_HEADER_AUTH_KEY, TOKEN_TYPE } from '@/constants/api.constant'
-import { PERSIST_STORE_NAME } from '@/constants/app.constant'
-import deepParseJson from '@/utils/deepParseJson'
-import store from '@/store'
+import axios from 'axios';
+import appConfig from '@/configs/app.config';
+import { REQUEST_HEADER_AUTH_KEY, TOKEN_TYPE } from '@/constants/api.constant';
+import { PERSIST_STORE_NAME } from '@/constants/app.constant';
+import deepParseJson from '@/utils/deepParseJson';
+import store from '@/store';
 
-const unauthorizedCode = [401]
+const unauthorizedCode = [401];
 
 const BaseService = axios.create({
     timeout: 60000,
     baseURL: appConfig.apiPrefix,
-})
+});
 
+// Request interceptor
 BaseService.interceptors.request.use(
     (config) => {
-        const rawPersistData = localStorage.getItem(PERSIST_STORE_NAME)
-        const persistData = deepParseJson(rawPersistData)
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let accessToken = (persistData as any).auth.token
-
+        const rawPersistData = localStorage.getItem(PERSIST_STORE_NAME);
+        const persistData = deepParseJson(rawPersistData);
+        console.log("Verify Step 1")
+        let accessToken = (persistData as any)?.auth?.token || '';
+        console.log(accessToken, "verify Access Token")
         if (!accessToken) {
-            const { auth } = store.getState()
-            accessToken = auth.token
+            const { auth } = store.getState() || "";
+            accessToken = auth?.token;
         }
-
+        console.log("Verify Step 2")
         if (accessToken) {
-            config.headers[
-                REQUEST_HEADER_AUTH_KEY
-            ] = `${TOKEN_TYPE} ${accessToken}`
+            config.headers[REQUEST_HEADER_AUTH_KEY] = `${TOKEN_TYPE} ${accessToken}`;
         }
 
-        return config
+        // Logging request data
+        console.log('Request:', config.url, config.method, config.headers);
+
+        return config;
     },
     (error) => {
-        return Promise.reject(error)
+        console.error('Request error:', error);
+        return Promise.reject(error);
     }
-)
+);
 
+// Response interceptor
 BaseService.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // Logging response data
+        console.log('Response:', response.status, response.data);
+        return response;
+    },
     (error) => {
-        const { response } = error
+        const { response } = error;
+
+        // Logging response error
+        console.error('Response error:', error?.message, response?.status, response?.data);
 
         if (response && unauthorizedCode.includes(response.status)) {
+            // You can dispatch an action to log the user out, etc.
             // store.dispatch(signOutSuccess())
-            // If 404 Error We Will Remove Token
+            console.warn('Unauthorized access - logging out');
         }
 
-        return Promise.reject(error)
+        return Promise.reject(error);
     }
-)
+);
 
-export default BaseService
+export default BaseService;
