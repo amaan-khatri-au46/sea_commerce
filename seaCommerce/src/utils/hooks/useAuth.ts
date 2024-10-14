@@ -29,7 +29,7 @@ function useAuth() {
             if (resp?.data) {
                 const data:any = resp.data;  // assuming the response contains a token
                 dispatch(signInSuccess(data));  // Dispatch success action with the token
-                 navigate('/product')
+                 navigate('/')
                 return {
                     status: 'success',
                     message: 'Login successful',
